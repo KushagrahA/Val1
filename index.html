@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Be My Valentine ❤️</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --accent: #ff4d6d;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  /* Darker Reddish Pink Fallback */
+  background: #e63946; 
+  color: #333;
+}
+
+/* --- CANVAS BACKGROUND --- */
+#fluid-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* --- WRAPPER --- */
+#wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+/* --- GLASS CARD --- */
+.glass-surface {
+  position: relative; /* Anchor for the No button */
+  width: 90%;
+  max-width: 450px;
+  min-height: 500px; /* Ensure space for button to run */
+  padding: 3rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 40px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+  animation: breathe 4s ease-in-out infinite;
+  transition: opacity 0.5s ease;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* --- FACE ANIMATION --- */
+.face-box {
+  width: 120px;
+  height: 120px;
+  background: white;
+  border-radius: 50%;
+  margin-bottom: 2rem;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(255, 77, 109, 0.3);
+  animation: floatFace 3s ease-in-out infinite;
+}
+
+@keyframes floatFace {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.eyes {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  padding-top: 40px;
+}
+
+.eye {
+  width: 16px;
+  height: 16px;
+  background: #333;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  animation: blink 4s infinite;
+}
+
+@keyframes blink {
+  0%, 96%, 100% { height: 16px; }
+  98% { height: 2px; }
+}
+
+.pupil {
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+
+.mouth {
+  width: 40px;
+  height: 12px;
+  border-bottom: 4px solid #333;
+  border-radius: 50%;
+  margin: 12px auto;
+  transition: 0.3s ease;
+}
+
+.face-box.happy .mouth {
+  width: 24px;
+  height: 24px;
+  background: #ff4d6d;
+  border: none;
+  clip-path: polygon(50% 80%, 100% 30%, 80% 0, 50% 20%, 20% 0, 0 30%);
+}
+
+.blush {
+  position: absolute;
+  width: 20px;
+  height: 10px;
+  background: rgba(255, 77, 109, 0.4);
+  border-radius: 50%;
+  top: 70px;
+}
+.blush.left { left: 18px; }
+.blush.right { right: 18px; }
+
+/* --- TYPOGRAPHY --- */
+h1 {
+  font-family: 'Dancing Script', cursive;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  font-size: 3.5rem;
+  margin-bottom: 2.5rem;
+  line-height: 1.1;
+  pointer-events: none; /* Let clicks pass through text */
+}
+
+/* --- CONTROLS --- */
+.controls {
+  position: relative;
+  width: 100%;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+button {
+  padding: 14px 40px;
+  border-radius: 25px;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+#yesBtn {
+  background: white;
+  color: #d00000;
+  z-index: 10;
+}
+
+#yesBtn:hover {
+  transform: scale(1.1) rotate(-3deg);
+  box-shadow: 0 8px 20px rgba(255, 0, 0, 0.4);
+}
+
+#noBtn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  /* Important for movement logic: */
+  position: absolute; 
+  right: 20px; /* Start position inside controls area */
+}
+
+/* --- SUCCESS LAYER --- */
+#success-layer {
+  position: fixed;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  background: rgba(220, 20, 60, 0.9); /* Deep Red overlay */
+  backdrop-filter: blur(10px);
+}
+
+.panda-container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.panda {
+  font-size: 80px;
+  animation: bounce 0.6s infinite alternate;
+}
+.panda:nth-child(2) { animation-delay: 0.1s; }
+
+@keyframes bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-20px); }
+}
+
+/* --- RAIN --- */
+#heart-rain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+}
+.rain-heart {
+  position: absolute;
+  font-size: 24px;
+  animation: fall 3s linear forwards;
+}
+@keyframes fall {
+  from { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+  to { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="fluid-canvas"></canvas>
+
+<div id="wrapper">
+  <div class="glass-surface" id="main-card">
+    <div class="face-box" id="face">
+      <div class="blush left"></div>
+      <div class="blush right"></div>
+      <div class="eyes">
+        <div class="eye"><div class="pupil"></div></div>
+        <div class="eye"><div class="pupil"></div></div>
+      </div>
+      <div class="mouth"></div>
+    </div>
+
+    <h1>Be my Valentine?</h1>
+
+    <div class="controls">
+      <button id="yesBtn">Yes</button>
+      <button id="noBtn">No</button>
+    </div>
+  </div>
+</div>
+
+<div id="success-layer">
+  <div class="panda-container">
+    <div class="panda">🐼</div>
+    <div class="panda">❤️</div>
+    <div class="panda">🐼</div>
+  </div>
+  <h1>Yay! I knew it! ❤️</h1>
+</div>
+
+<div id="heart-rain"></div>
+
+<script id="vertShader" type="x-shader/x-vertex">
+  #version 300 es
+  in vec4 position;
+  void main() {
+    gl_Position = position;
+  }
+</script>
+
+<script id="fragShader" type="x-shader/x-fragment">
+  #version 300 es
+  precision highp float;
+  uniform vec2 u_resolution;
+  uniform float u_time;
+  out vec4 outColor;
+
+  void main() {
+    vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+    float t = u_time * 0.4;
+
+    // Fluid movement logic
+    float r = 0.5 + 0.5 * sin(t + uv.x * 3.0 + uv.y * 2.0);
+    float g = 0.5 + 0.5 * cos(t * 0.8 + uv.y * 4.0);
+    float b = 0.5 + 0.5 * sin(t * 1.2 + uv.x * 5.0);
+
+    vec3 blobColor = vec3(r, g, b);
+    
+    // REDDISH PINK COLOR THEME
+    // We mix a deep red/pink base with the blobs
+    vec3 baseRed = vec3(0.9, 0.1, 0.3); 
+    
+    // Mix them to get a rich, non-white result
+    vec3 finalColor = mix(baseRed, blobColor, 0.35);
+
+    outColor = vec4(finalColor, 1.0);
+  }
+</script>
+
+<script>
+// --- INTERACTION LOGIC ---
+const face = document.getElementById("face");
+const pupils = document.querySelectorAll(".pupil");
+const noBtn = document.getElementById("noBtn");
+const yesBtn = document.getElementById("yesBtn");
+const mainCard = document.getElementById("main-card");
+
+// 1. Mouse & Touch Tracking for Eyes
+function handleMove(clientX, clientY) {
+  const rect = face.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+
+  pupils.forEach(p => {
+    const angle = Math.atan2(clientY - cy, clientX - cx);
+    const dist = Math.min(6, Math.hypot(clientX - cx, clientY - cy) / 10);
+    p.style.transform = `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px)`;
+  });
+}
+
+document.addEventListener("mousemove", e => handleMove(e.clientX, e.clientY));
+document.addEventListener("touchmove", e => {
+  handleMove(e.touches[0].clientX, e.touches[0].clientY);
+}, { passive: true });
+
+// 2. Happy Face
+const setHappy = (isHappy) => {
+  if (isHappy) face.classList.add('happy');
+  else face.classList.remove('happy');
+};
+face.addEventListener('mouseenter', () => setHappy(true));
+face.addEventListener('mouseleave', () => setHappy(false));
+face.addEventListener('touchstart', () => setHappy(true), {passive: true});
+face.addEventListener('touchend', () => setHappy(false));
+
+// 3. ROBUST RUNAWAY BUTTON LOGIC
+function moveNoButton(e) {
+  // We calculate dimensions based on the MAIN CARD, so it stays inside the glass box
+  // This prevents it from running off the screen on mobile
+  const cardRect = mainCard.getBoundingClientRect();
+  const btnRect = noBtn.getBoundingClientRect();
+
+  // Calculate maximum allowed positions within the card (with padding)
+  // We use 20px padding from the edge
+  const maxX = cardRect.width - btnRect.width - 20;
+  const maxY = cardRect.height - btnRect.height - 20;
+
+  // Generate random X/Y
+  const randomX = Math.random() * maxX;
+  const randomY = Math.random() * maxY;
+
+  // Apply to button
+  noBtn.style.position = "absolute"; // Ensure it's absolute
+  noBtn.style.left = randomX + "px";
+  noBtn.style.top = randomY + "px";
+  noBtn.style.right = "auto"; // Clear default right alignment
+  
+  if(e.type === 'touchstart') e.preventDefault();
+}
+
+noBtn.addEventListener('mouseover', moveNoButton);
+noBtn.addEventListener('touchstart', moveNoButton, { passive: false });
+noBtn.addEventListener('click', moveNoButton);
+
+// 4. Success Logic
+yesBtn.onclick = () => {
+  document.getElementById("main-card").style.display = "none";
+  document.getElementById("success-layer").style.display = "flex";
+  startHeartRain();
+};
+
+function startHeartRain() {
+  const container = document.getElementById("heart-rain");
+  const emojis = ["❤️", "💖", "🥰", "😍", "🌹"];
+  
+  const interval = setInterval(() => {
+    const h = document.createElement("div");
+    h.className = "rain-heart";
+    h.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    h.style.left = Math.random() * 100 + "vw";
+    h.style.animationDuration = (2 + Math.random() * 3) + "s";
+    h.style.fontSize = (20 + Math.random() * 30) + "px";
+    container.appendChild(h);
+    setTimeout(() => h.remove(), 5000);
+  }, 100);
+}
+
+// --- WEBGL2 FLUID SHADER ---
+const canvas = document.getElementById("fluid-canvas");
+const gl = canvas.getContext("webgl2");
+
+if (!gl) {
+  console.log("WebGL2 not supported, falling back to CSS");
+} else {
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function createShader(gl, type, source) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.error(gl.getShaderInfoLog(shader));
+      gl.deleteShader(shader);
+      return null;
+    }
+    return shader;
+  }
+
+  const vs = createShader(gl, gl.VERTEX_SHADER, document.getElementById("vertShader").textContent.trim());
+  const fs = createShader(gl, gl.FRAGMENT_SHADER, document.getElementById("fragShader").textContent.trim());
+  const program = gl.createProgram();
+  gl.attachShader(program, vs);
+  gl.attachShader(program, fs);
+  gl.linkProgram(program);
+
+  const positionBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+
+  const positionAttributeLocation = gl.getAttribLocation(program, "position");
+  const resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
+  const timeUniformLocation = gl.getUniformLocation(program, "u_time");
+  
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+  gl.enableVertexAttribArray(positionAttributeLocation);
+  gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+  function draw(time) {
+    gl.useProgram(program);
+    gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
+    gl.uniform1f(timeUniformLocation, time * 0.001);
+    gl.bindVertexArray(vao);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+}
+</script>
+</body>
+</html>
